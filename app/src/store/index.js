@@ -40,6 +40,8 @@ const globalReducer = getReducerWithLocalStorageSync("root", globalSlice.reducer
   "appTheme",
   // "rules",
   // "desktopSpecificDetails.appsList",
+  "hasConnectedApp",
+  "workspaceOnboarding",
   "userPersona",
   "country",
   "mobileDebugger",

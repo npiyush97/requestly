@@ -12,6 +12,12 @@ export const AUTH = {
     FAILED: "login_failed",
   },
 
+  LOGOUT: {
+    ATTEMPTED: "logout_attempted",
+    SUCCESS: "logout_success",
+    FAILED: "logout_failed",
+  },
+
   RESET_PASSWORD: {
     ATTEMPTED: "reset_password_attempted",
     SUCCESS: "reset_password_success",
@@ -39,6 +45,9 @@ export const AUTH = {
   },
   AUTH_MODAL: {
     SHOWN: "auth_modal_shown",
+  },
+  AUTH_ONE_TAP_PROMPT: {
+    VISIBLE: "auth_one_tap_prompt_visible",
   },
 
   SOURCE: {
@@ -125,9 +134,13 @@ export const GROUPS = {
 
 export const ONBOARDING = {
   INSTALL_EXTENSION_LINK_CLICKED: "install_extension_link_clicked",
+  VIEW_ALL_PLATFORMS_CLICKED: "view_all_platforms_clicked",
   SIDEBAR_CLICKED: "sidebar_clicked",
   HEADER_CLICKED: "header_clicked",
+  TOPBAR_CLICKED: "topbar_clicked",
   HELPDESK_CLICKED: "helpdesk_clicked",
+  FOOTER_CLICKED: "footer_clicked",
+  DESKTOP_APP_PROMO_CLICKED: "desktop_app_download_promo_clicked",
 };
 
 export const TEAMS = {
@@ -149,6 +162,9 @@ export const TEAMS = {
   UPGRADE_WORKSPACE_CLICKED: "upgrade_workspace_clicked",
   ADD_WORKSPACE_NAME_MODAL_VIEWED: "add_workspace_name_modal_viewed",
   ADD_MEMBERS_IN_WORKSPACE_MODAL_VIEWED: "add_members_in_worskpace_modal_viewed",
+  WORKSPACE_INVITE_LINK_COPIED: "workspace_invite_link_copied",
+  ONBOARDING_WORKSPACE_SKIP: "onboarding_workspace_skip",
+  WORKSPACE_INVITE_ACCEPTED: "workspace_invite_accepted",
 };
 
 export const TRAFFIC_TABLE = {

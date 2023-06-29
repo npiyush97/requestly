@@ -162,6 +162,10 @@ export const getActiveModals = (state) => {
   return getGlobalState(state)["activeModals"];
 };
 
+export const getHasConnectedApp = (state) => {
+  return getGlobalState(state).misc?.persist?.hasConnectedApp;
+};
+
 export const getMarketplaceRuleStatus = (state) => {
   return getGlobalState(state)["marketplace"]["ruleStatus"];
 };
@@ -227,6 +231,10 @@ export const getIsRuleEditorTourCompleted = (state) => {
   );
 };
 
+export const getIsMiscTourCompleted = (state) => {
+  return getGlobalState(state).misc.persist?.isMiscTourCompleted;
+};
+
 export const getIsConnectedAppsTourCompleted = (state) => {
   return getGlobalState(state).misc.persist?.isConnectedAppsTourCompleted;
 };
@@ -237,4 +245,20 @@ export const getNetworkSessionSaveInProgress = (state) => {
 
 export const getIsNetworkTooltipShown = (state) => {
   return getGlobalState(state).misc.persist?.isNetworkSessionTooltipShown;
+};
+
+export const getIsWorkspaceOnboardingCompleted = (state) => {
+  return getGlobalState(state)?.workspaceOnboarding?.isOnboardingCompleted;
+};
+
+export const getWorkspaceOnboardingStep = (state) => {
+  return getGlobalState(state)?.workspaceOnboarding?.step;
+};
+
+export const getIsSecondarySidebarCollapsed = (state) => {
+  return getGlobalState(state).userPreferences.isSecondarySidebarCollapsed;
+};
+
+export const getWorkspaceOnboardingTeamDetails = (state) => {
+  return getGlobalState(state)?.workspaceOnboarding?.workspace;
 };

@@ -6,15 +6,15 @@ import { getAppMode, getUserAuthDetails } from "store/selectors";
 import SpinnerColumn from "../../../../../../misc/SpinnerColumn";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { redirectToRules, redirectToMyTeams } from "../../../../../../../utils/RedirectionUtils";
-import { doc, getFirestore, updateDoc } from "firebase/firestore";
 import { clearCurrentlyActiveWorkspace, showSwitchWorkspaceSuccessToast } from "actions/TeamWorkspaceActions";
 import LearnMoreAboutWorkspace from "../common/LearnMoreAboutWorkspace";
 import WorkspaceStatusSyncing from "./WorkspaceStatusSyncing";
 import DeleteWorkspaceModal from "./DeleteWorkspaceModal";
-import LoadingModal from "../../../../../../../layouts/DashboardLayout/Sidebar/WorkspaceSelector/LoadingModal";
+import LoadingModal from "../../../../../../../layouts/DashboardLayout/MenuHeader/WorkspaceSelector/LoadingModal";
 import { toast } from "utils/Toast";
 import { trackWorkspaceDeleted, trackWorkspaceDeleteClicked } from "modules/analytics/events/common/teams";
 import "./TeamSettings.css";
+import { renameWorkspace } from "backend/workspace";
 
 const TeamSettings = ({ teamId, isTeamAdmin, isTeamArchived, teamOwnerId }) => {
   const navigate = useNavigate();
@@ -110,15 +110,10 @@ const TeamSettings = ({ teamId, isTeamAdmin, isTeamArchived, teamOwnerId }) => {
       return;
     }
 
-    const db = getFirestore();
-    const teamRef = doc(db, "teams", teamId);
-
     setRenameInProgress(true);
     setOriginalTeamName(name);
 
-    updateDoc(teamRef, {
-      name: name,
-    })
+    renameWorkspace(teamId, name)
       .catch((err) => {
         message.error("Only owner can change the team name");
         setName(originalTeamName);

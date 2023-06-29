@@ -1,37 +1,46 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Route, Routes, Navigate, useLocation, useSearchParams, useNavigate } from "react-router-dom";
-//FOR ROUTER
-import routes from "../../routes";
-//SUB COMPONENTS
+import { useLocation, useSearchParams, useNavigate, useRoutes } from "react-router-dom";
+import { routes } from "routes";
 import SpinnerModal from "components/misc/SpinnerModal";
 import AuthModal from "components/authentication/AuthModal";
-//CONSTANTS
 import APP_CONSTANTS from "config/constants";
-import { CONSTANTS as GLOBAL_CONSTANTS } from "@requestly/requestly-core";
 import { actions } from "store";
+import { CONSTANTS as GLOBAL_CONSTANTS } from "@requestly/requestly-core";
 //UTILS
-import { getActiveModals, getAppMode, getUserPersonaSurveyDetails } from "store/selectors";
+import {
+  getActiveModals,
+  getAppMode,
+  getUserPersonaSurveyDetails,
+  getUserAuthDetails,
+  getIsWorkspaceOnboardingCompleted,
+} from "store/selectors";
 import { getRouteFromCurrentPath } from "utils/URLUtils";
-import ExtensionModal from "components/user/ExtensionModal/index.js";
 import FreeTrialExpiredModal from "../../components/landing/pricing/FreeTrialExpiredModal";
 import SyncConsentModal from "../../components/user/SyncConsentModal";
 import { trackPageViewEvent } from "modules/analytics/events/misc/pageView";
-import { PersonaSurveyModal } from "components/misc/PersonaSurvey";
+import { PersonaSurvey } from "components/misc/PersonaSurvey";
 import ImportRulesModal from "components/features/rules/ImportRulesModal";
 import ConnectedAppsModal from "components/mode-specific/desktop/MySources/Sources/index";
+import { useFeatureValue } from "@growthbook/growthbook-react";
+import { WorkspaceOnboarding } from "components/features/rules/GettingStarted/WorkspaceOnboarding";
+import InstallExtensionModal from "components/misc/InstallExtensionCTA/Modal";
 const { PATHS } = APP_CONSTANTS;
 
 const DashboardContent = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const appRoutes = useRoutes(routes);
   const [searchParams] = useSearchParams();
+  const appOnboardingExp = useFeatureValue("app_onboarding", null);
 
   //Global state
   const dispatch = useDispatch();
+  const user = useSelector(getUserAuthDetails);
   const appMode = useSelector(getAppMode);
   const activeModals = useSelector(getActiveModals);
   const userPersona = useSelector(getUserPersonaSurveyDetails);
+  const isWorkspaceOnboardingCompleted = useSelector(getIsWorkspaceOnboardingCompleted);
   const [isImportRulesModalActive, setIsImportRulesModalActive] = useState(false);
 
   const toggleSpinnerModal = () => {
@@ -49,8 +58,8 @@ const DashboardContent = () => {
   const toggleConnectedAppsModal = () => {
     dispatch(actions.toggleActiveModal({ modalName: "connectedAppsModal" }));
   };
-  const togglePersonaSurveyModal = useCallback(() => {
-    dispatch(actions.toggleActiveModal({ modalName: "personaSurveyModal" }));
+  const toggleWorkspaceOnboardingModal = useCallback(() => {
+    dispatch(actions.toggleActiveModal({ modalName: "workspaceOnboardingModal" }));
   }, [dispatch]);
 
   const toggleImportRulesModal = () => {
@@ -68,16 +77,10 @@ const DashboardContent = () => {
   const prevProps = usePrevious({ location });
 
   useEffect(() => {
-    if (userPersona.page === 4 && userPersona.isSurveyCompleted === false) {
-      navigate(PATHS.GETTING_STARTED, {
-        replace: true,
-        state: {
-          src: "persona_survey_modal",
-          redirectTo: location.state?.redirectTo ?? PATHS.RULES.MY_RULES.ABSOLUTE,
-        },
-      });
+    if (PATHS.ROOT === location.pathname && appMode === GLOBAL_CONSTANTS.APP_MODES.DESKTOP) {
+      navigate(PATHS.DESKTOP.INTERCEPT_TRAFFIC.ABSOLUTE);
     }
-  }, [navigate, location.state?.redirectTo, userPersona.page, userPersona.isSurveyCompleted]);
+  }, [appMode, location, navigate]);
 
   useEffect(() => {
     if (prevProps && prevProps.location !== location) {
@@ -92,64 +95,9 @@ const DashboardContent = () => {
     }
   }, [location, prevProps, searchParams]);
 
-  const getRoutes = (routes) => {
-    return routes.map((route, key) => {
-      const propsFromRoute = route.props || {};
-      return (
-        <Route
-          path={"/".concat(route.path).replace(/\/\//g, "/")}
-          key={key}
-          element={<route.component location={window.location} {...propsFromRoute} />}
-        />
-      );
-    });
-  };
-
   return (
     <>
-      <div id="dashboardMainContent">
-        <Routes>
-          {getRoutes(routes)}
-          {appMode === GLOBAL_CONSTANTS.APP_MODES.DESKTOP && (
-            <Route path={PATHS.ROOT} element={<Navigate to={PATHS.DESKTOP.INTERCEPT_TRAFFIC.ABSOLUTE} />} />
-          )}
-          <Route path={PATHS.ROOT} element={<Navigate to={PATHS.RULES.ABSOLUTE} />} />
-          <Route path={PATHS.INDEX_HTML} element={<Navigate to={PATHS.RULES.ABSOLUTE} />} />
-          <Route path={PATHS.FEEDBACK.ABSOLUTE} element={<Navigate to={PATHS.FEEDBACK.ABSOLUTE} />} />
-          <Route path={PATHS.HOME.ABSOLUTE} element={<Navigate to={PATHS.HOME.ABSOLUTE} />} />
-          {/* <Route
-            path={PATHS.RULES.ABSOLUTE}
-            element={
-              <Navigate
-                to={<ProtectedRoute component={<RulesIndexView />} />}
-              />
-            }
-          /> */}
-
-          {/** SUPPORT LEGACY URLS */}
-          <Route
-            path={PATHS.LEGACY.FILES_LIBRARY.ABSOLUTE + "/:id"}
-            element={<Navigate to={PATHS.FILES.VIEWER.ABSOLUTE + "/:id"} />}
-          />
-          <Route path={PATHS.LEGACY.PRICING.ABSOLUTE} element={<Navigate to={PATHS.PRICING.ABSOLUTE} />} />
-          <Route
-            path={PATHS.LEGACY.LICENSE.MANAGE.ABSOLUTE}
-            element={<Navigate to={PATHS.LICENSE.MANAGE.ABSOLUTE} />}
-          />
-          <Route path={PATHS.LEGACY.LICENSE.ABSOLUTE} element={<Navigate to={PATHS.LICENSE.ABSOLUTE} />} />
-          <Route path={PATHS.LEGACY.SETTINGS.ABSOLUTE} element={<Navigate to={PATHS.SETTINGS.ABSOLUTE} />} />
-          <Route
-            path={PATHS.LEGACY.UNLOCK_PREMIUM.ABSOLUTE}
-            element={<Navigate to={PATHS.UNLOCK_PREMIUM.ABSOLUTE} />}
-          />
-          <Route path={PATHS.LEGACY.GOODBYE.ABSOLUTE} element={<Navigate to={PATHS.GOODBYE.ABSOLUTE} />} />
-          <Route
-            path={PATHS.EXTENSION_INSTALLED.RELATIVE}
-            element={<Navigate to={PATHS.EXTENSION_INSTALLED.ABSOLUTE} />}
-          />
-          <Route path={PATHS.ANY} element={<Navigate to={PATHS.PAGE404.ABSOLUTE} />} />
-        </Routes>
-      </div>
+      <div id="dashboardMainContent">{appRoutes}</div>
 
       {/* MODALS */}
       {activeModals.loadingModal.isActive ? (
@@ -163,9 +111,10 @@ const DashboardContent = () => {
         />
       ) : null}
       {activeModals.extensionModal.isActive ? (
-        <ExtensionModal
-          isOpen={activeModals.extensionModal.isActive}
-          toggle={() => toggleExtensionModal()}
+        <InstallExtensionModal
+          open={activeModals.extensionModal.isActive}
+          onCancel={() => toggleExtensionModal()}
+          eventPage="dashboard_content"
           {...activeModals.extensionModal.props}
         />
       ) : null}
@@ -189,16 +138,20 @@ const DashboardContent = () => {
           {...activeModals.connectedAppsModal.props}
         />
       ) : null}
-      {!userPersona.isSurveyCompleted ? (
-        <PersonaSurveyModal
-          isOpen={activeModals.personaSurveyModal.isActive}
-          toggle={togglePersonaSurveyModal}
-          toggleImportRulesModal={toggleImportRulesModal}
-          {...activeModals.personaSurveyModal.props}
+      {!userPersona.isSurveyCompleted && appOnboardingExp === "control" && !user?.loggedIn ? (
+        <PersonaSurvey isSurveyModal={true} isOpen={activeModals.personaSurveyModal.isActive} />
+      ) : null}
+
+      {appOnboardingExp === "workspace_onboarding" &&
+      !isWorkspaceOnboardingCompleted &&
+      !userPersona.isSurveyCompleted ? (
+        <WorkspaceOnboarding
+          isOpen={activeModals.workspaceOnboardingModal.isActive}
+          handleUploadRulesModalClick={toggleImportRulesModal}
+          toggle={toggleWorkspaceOnboardingModal}
         />
       ) : null}
 
-      {/* ) : null} */}
       {isImportRulesModalActive ? (
         <ImportRulesModal isOpen={isImportRulesModalActive} toggle={toggleImportRulesModal} />
       ) : null}

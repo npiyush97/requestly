@@ -20,6 +20,11 @@ export const updateUserPreferences = (prevState, action) => {
   prevState.userPreferences[action.payload.key] = action.payload.value;
 };
 
+export const updateSecondarySidebarCollapse = (prevState, action) => {
+  const isCollapsed = prevState.userPreferences.isSecondarySidebarCollapsed;
+  prevState.userPreferences.isSecondarySidebarCollapsed = action.payload ?? !isCollapsed;
+};
+
 export const updateUsername = (prevState, action) => {
   prevState.user.details.username = action.payload.username;
 };
@@ -80,7 +85,8 @@ export const updateUserAttributes = (prevState, action) => {
 };
 
 export const updateProductTourCompleted = (prevState, action) => {
-  prevState.misc.persist[action.payload.tour] = true;
+  if (action.payload.subTour) prevState.misc.persist[action.payload.tour][action.payload.subTour] = true;
+  else prevState.misc.persist[action.payload.tour] = true;
 };
 
 export const updateNetworkSessionSaveInProgress = (prevState, action) => {
@@ -89,4 +95,17 @@ export const updateNetworkSessionSaveInProgress = (prevState, action) => {
 
 export const updateNetworkSessionTooltipShown = (prevState) => {
   prevState.misc.persist.isNetworkSessionTooltipShown = true;
+};
+
+export const updateIsWorkspaceOnboardingCompleted = (prevState) => {
+  prevState.workspaceOnboarding.isOnboardingCompleted = true;
+  prevState.workspaceOnboarding.workspace = {};
+};
+
+export const updateWorkspaceOnboardingStep = (prevState, action) => {
+  prevState.workspaceOnboarding.step = action.payload;
+};
+
+export const updateWorkspaceOnboardingTeamDetails = (prevState, action) => {
+  prevState.workspaceOnboarding.workspace = { ...prevState.workspaceOnboarding.workspace, ...action.payload };
 };

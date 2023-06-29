@@ -11,6 +11,7 @@ import {
   signInWithEmailLink as signInWithEmailLinkFirebaseLib,
   getAdditionalUserInfo,
   signInWithEmailAndPassword,
+  signInWithCredential,
   updateProfile,
   sendPasswordResetEmail,
   verifyPasswordResetCode,
@@ -58,6 +59,11 @@ import Logger from "lib/logger";
 import { StorageService } from "init";
 import APP_CONSTANTS from "config/constants";
 import { DB_UTILS } from "@requestly/rq-common";
+import {
+  trackLogoutAttempted,
+  trackLogoutFailed,
+  trackLogoutSuccess,
+} from "modules/analytics/events/common/auth/logout";
 
 const { getUserProfilePath } = DB_UTILS;
 
@@ -295,6 +301,57 @@ export function resetPassword(oobCode, password) {
     });
 }
 
+export const handleOnetapSignIn = async ({ credential }) => {
+  try {
+    const auth = getAuth(firebaseApp);
+    const OAuthCredential = GoogleAuthProvider.credential(credential);
+
+    const result = await signInWithCredential(auth, OAuthCredential);
+    const uid = result?.user?.uid || null;
+    const email = result?.user?.email || null;
+
+    const additionalUserInfo = getAdditionalUserInfo(result);
+    const is_new_user = additionalUserInfo?.isNewUser || false;
+
+    if (is_new_user) {
+      trackSignUpAttemptedEvent({
+        auth_provider: AUTH_PROVIDERS.GMAIL,
+        source: "one_tap_prompt",
+      });
+      trackSignupSuccessEvent({
+        auth_provider: AUTH_PROVIDERS.GMAIL,
+        email,
+        uid,
+        email_type: getEmailType(email),
+        domain: email.split("@")[1],
+        source: "one_tap_prompt",
+      });
+    } else {
+      trackLoginAttemptedEvent({
+        auth_provider: AUTH_PROVIDERS.GMAIL,
+        source: "one_tap_prompt",
+      });
+      trackLoginSuccessEvent({
+        auth_provider: AUTH_PROVIDERS.GMAIL,
+        uid,
+        email,
+        email_type: getEmailType(email),
+        domain: email.split("@")[1],
+        source: "one_tap_prompt",
+      });
+    }
+
+    return { is_new_user };
+  } catch (err) {
+    trackLoginFailedEvent({
+      auth_provider: AUTH_PROVIDERS.GMAIL,
+      error_message: err.message,
+      source: "one_tap_prompt",
+    });
+    throw err;
+  }
+};
+
 export async function googleSignIn(callback, MODE, source) {
   const provider = new GoogleAuthProvider();
   provider.addScope("profile");
@@ -347,7 +404,7 @@ export async function googleSignIn(callback, MODE, source) {
 
       callback && callback.call(null, true);
 
-      return authData;
+      return { ...authData, isNewUser: is_new_user };
     })
     .catch((err) => {
       trackLoginFailedEvent({
@@ -532,7 +589,13 @@ export function removeValueAsPromise(pathArray) {
   return new Promise((resolve) => removeValue(pathArray, resolve));
 }
 
-export function signOut() {
+export async function signOut() {
+  trackLogoutAttempted();
   const auth = getAuth(firebaseApp);
-  return signOutFirebaseFunction(auth);
+  try {
+    await signOutFirebaseFunction(auth);
+    trackLogoutSuccess();
+  } catch {
+    trackLogoutFailed();
+  }
 }

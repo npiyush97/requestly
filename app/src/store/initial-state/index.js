@@ -107,6 +107,10 @@ const INITIAL_STATE = {
       isActive: false,
       props: {},
     },
+    workspaceOnboardingModal: {
+      isActive: false,
+      props: {},
+    },
   },
 
   /* Marketplace */
@@ -146,11 +150,18 @@ const INITIAL_STATE = {
   },
 
   userPreferences: {
+    isSecondarySidebarCollapsed: false,
     isRedirectRuleTutorialModalShown: false,
   },
 
   userAttributes: {
     deviceId: null,
+  },
+
+  workspaceOnboarding: {
+    step: "auth",
+    isOnboardingCompleted: false,
+    workspace: {},
   },
 
   misc: {
@@ -160,6 +171,12 @@ const INITIAL_STATE = {
       isConnectedAppsTourCompleted: false,
       isNetworkSessionTooltipShown: false,
       isRuleEditorTourCompleted: false,
+      isMiscTourCompleted: {
+        firstRule: false,
+        fifthRule: false,
+      },
+
+      hasConnectedApp: false,
     },
     nonPersist: {
       networkSessionSaveInProgress: false,

@@ -84,7 +84,7 @@ const GraphqlRequestPayload: React.FC<GraphqlRequestPayloadProps> = ({
     modifyPairAtGivenPath(e, pairIndex, SOURCE_REQUEST_PAYLOAD_KEY);
     const key = e.target.value;
 
-    if (key === "") {
+    if (key === "" && gqlOperationFilter.value === "") {
       clearRequestPayload();
     }
 
@@ -99,7 +99,7 @@ const GraphqlRequestPayload: React.FC<GraphqlRequestPayloadProps> = ({
     modifyPairAtGivenPath(e, pairIndex, SOURCE_REQUEST_PAYLOAD_VALUE);
     const value = e.target.value;
 
-    if (value === "") {
+    if (value === "" && gqlOperationFilter.key === "") {
       clearRequestPayload();
     }
 
@@ -134,7 +134,7 @@ const GraphqlRequestPayload: React.FC<GraphqlRequestPayloadProps> = ({
           type="text"
           autoComplete="off"
           placeholder="Key e.g. operationName"
-          className="graphql-operation-type-input"
+          className="graphql-operation-key-input"
           value={gqlOperationFilter.key}
           onChange={handleRequestPayloadKeyChange}
         />
@@ -143,7 +143,7 @@ const GraphqlRequestPayload: React.FC<GraphqlRequestPayloadProps> = ({
           type="text"
           autoComplete="off"
           placeholder="value e.g. getUsers"
-          className="graphql-operation-type-name"
+          className="graphql-operation-name-input"
           value={gqlOperationFilter.value}
           onChange={handleRequestPayloadValueChange}
         />

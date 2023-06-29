@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { actions } from "../store";
 // UTILS
-import { getAppMode, getDesktopSpecificDetails, getUserAuthDetails } from "../store/selectors";
+import { getAppMode, getDesktopSpecificDetails, getHasConnectedApp, getUserAuthDetails } from "../store/selectors";
 // CONSTANTS
 import { CONSTANTS as GLOBAL_CONSTANTS } from "@requestly/requestly-core";
 // ACTIONS
@@ -24,6 +24,7 @@ import PSMH from "../config/PageScriptMessageHandler";
 import { invokeSyncingIfRequired } from "./DbListenerInit/syncingNodeListener";
 import { getCurrentlyActiveWorkspace } from "store/features/teams/selectors";
 import { toast } from "utils/Toast";
+import { trackDesktopBGEvent, trackDesktopMainEvent } from "modules/analytics/events/desktopApp/backgroundEvents";
 import { useNavigate } from "react-router-dom";
 
 let hasAppModeBeenSet = false;
@@ -46,7 +47,8 @@ const AppModeInitializer = () => {
   const appMode = useSelector(getAppMode);
   const user = useSelector(getUserAuthDetails);
   const currentlyActiveWorkspace = useSelector(getCurrentlyActiveWorkspace);
-  const { appsList, isBackgroundProcessActive } = useSelector(getDesktopSpecificDetails);
+  const { appsList, isBackgroundProcessActive, isProxyServerRunning } = useSelector(getDesktopSpecificDetails);
+  const hasConnectedAppBefore = useSelector(getHasConnectedApp);
 
   const appsListRef = useRef(null);
   const hasMessageHandlersBeenSet = useRef(false);
@@ -131,6 +133,14 @@ const AppModeInitializer = () => {
           }
         });
       }
+      window.RQ.DESKTOP.SERVICES.IPC.registerEvent("analytics-event", (payload) => {
+        if (payload?.origin && payload?.origin === "main") {
+          trackDesktopMainEvent(payload?.name, payload?.params);
+        } else {
+          // todo: need to setup relay for BG renderer events
+          trackDesktopBGEvent(payload?.name, payload?.params);
+        }
+      });
 
       window.RQ.DESKTOP.SERVICES.IPC.registerEvent("deeplink-handler", (payload) => {
         navigate(payload);
@@ -143,6 +153,12 @@ const AppModeInitializer = () => {
       trackDesktopAppStartedEvent();
     }
   }, [appMode]);
+
+  useEffect(() => {
+    if (isProxyServerRunning && appMode === GLOBAL_CONSTANTS.APP_MODES.DESKTOP && !hasConnectedAppBefore) {
+      dispatch(actions.toggleActiveModal({ modalName: "connectedAppsModal" }));
+    }
+  }, [appMode, dispatch, hasConnectedAppBefore, isProxyServerRunning]);
 
   // Set app mode to "DESKTOP" if required. Default is "EXTENSION"
   useEffect(() => {

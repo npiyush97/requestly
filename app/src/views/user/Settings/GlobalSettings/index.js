@@ -8,6 +8,7 @@ import { CONSTANTS as GLOBAL_CONSTANTS } from "@requestly/requestly-core";
 import { isFeatureCompatible } from "../../../../utils/CompatibilityUtils";
 import ConsoleLogger from "./ConsoleLogger";
 import DataCollection from "./DataCollection";
+import RulesSyncing from "./RulesSyncing";
 
 const GlobalSettings = ({ appMode }) => {
   const user = useSelector(getUserAuthDetails);
@@ -24,30 +25,18 @@ const GlobalSettings = ({ appMode }) => {
   const isCompatible = useMemo(() => isFeatureCompatible(APP_CONSTANTS.FEATURES.EXTENSION_CONSOLE_LOGGER), []);
 
   if (appMode === GLOBAL_CONSTANTS.APP_MODES.EXTENSION && !storageType) {
-    return (
-      <InstallExtensionCTA
-        heading={"Requestly Extension Settings"}
-        subHeadingExtension={"Start intercepting HTTP requests"}
-        content={"Please install Requestly Browser Extension first."}
-        supportsMobileDevices={false}
-        eventPage="settings_page"
-      />
-    );
+    return <InstallExtensionCTA heading="Requestly Extension Settings" eventPage="settings_page" />;
   }
 
   return (
     <>
       <div className="settings-header header">⚙️ Global Settings</div>
+      <p className="text-gray text-sm settings-caption">
+        Please enable the following settings to get the best experience
+      </p>
       <div>
-        {appMode === GLOBAL_CONSTANTS.APP_MODES.EXTENSION && (
-          <>
-            <p className="text-gray text-sm settings-caption">
-              Please enable the following settings to get the best experience
-            </p>
-            <ConsoleLogger isCompatible={isCompatible} />
-          </>
-        )}
-
+        {appMode === GLOBAL_CONSTANTS.APP_MODES.EXTENSION && <ConsoleLogger isCompatible={isCompatible} />}
+        <RulesSyncing />
         {user?.loggedIn ? <DataCollection /> : null}
       </div>
     </>
